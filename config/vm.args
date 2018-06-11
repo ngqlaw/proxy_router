@@ -1,0 +1,10 @@
+-name proxy_router@127.0.0.1
+-setcookie proxy_router_cookie
+-hidden
+-smp auto
++K true
++A30
++C multi_time_warp
++e 102400
++P 500000
++Q 102400
