@@ -21,9 +21,9 @@ init(_ServerHandler, IP, Port, Req) ->
             Cookies = binary:split(CookieInfo, [<<";">>], [global]),
             Header = TempHeader#{<<"set-cookie">> => Cookies};
         {ok, {StatusCode, Body}} ->
-            lager:info("reply:~p", [{StatusCode}]),
             Header = #{};
         Error ->
+            lager:error("http url ~p fail:~p", [Url, Error]),
             StatusCode = 400,
             Header = #{},
             Body = <<"Error!">>
