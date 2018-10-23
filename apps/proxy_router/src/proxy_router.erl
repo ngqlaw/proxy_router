@@ -53,11 +53,13 @@ do_start([{ws, {ToIP, ToPort, Config}, LocalPort}|T]) ->
         {proxy, {ToIP, ToPort}}
     ]),
     do_start(T);
-do_start([{http, {ToIP, ToPort, _Config}, LocalPort}|T]) ->
+do_start([{http, {ToIP, ToPort, Config}, LocalPort}|T]) ->
     open({ToIP, ToPort, http}, [
         {module, http},
         {shutdown, 0},
+        {host, proplists:get_value(host, Config, '_')},
         {port, LocalPort},
+        {path, proplists:get_value(path, Config, "/")},
         {proxy, {ToIP, ToPort}}
     ]),
     do_start(T);

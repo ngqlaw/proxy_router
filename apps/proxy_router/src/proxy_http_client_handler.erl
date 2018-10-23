@@ -14,15 +14,21 @@ init(_ServerHandler, IP, Port, Req) ->
     [Host, Path, Qs, Fragment] = cowboy_req:uri(Req),
     [Scheme, _] = binary:split(list_to_binary(Host), [<<"//">>]),
     Url = list_to_binary([Scheme, <<"//">>, IP, ":", integer_to_list(Port), Path, Qs, Fragment]),
-    case catch httpc:request(Method, {Url, []}, [], []) of
-        {ok, Res} ->
-            %% TODO
-            lager:info("reply info:~p", [Res]);
+    case catch httpc:request(Method, {binary_to_list(Url), []}, [], []) of
+        {ok, {{_, StatusCode, _}, HttpHeader, Body}} ->
+            TempHeader = maps:from_list([{list_to_binary(K), list_to_binary(V)} || {K, V} <- HttpHeader]),
+            CookieInfo = maps:get(<<"set-cookie">>, TempHeader, <<>>),
+            Cookies = binary:split(CookieInfo, [<<";">>], [global]),
+            Header = TempHeader#{<<"set-cookie">> => Cookies};
+        {ok, {StatusCode, Body}} ->
+            lager:info("reply:~p", [{StatusCode}]),
+            Header = #{};
         Error ->
-            lager:error("http url ~p fail:~p", [Url, Error])
+            StatusCode = 400,
+            Header = #{},
+            Body = <<"Error!">>
     end,
-    %% TODO
-    NewReq = cowboy_req:reply(400, #{}, <<"Missing body.">>, Req),
+    NewReq = cowboy_req:reply(StatusCode, Header, Body, Req),
     {ok, NewReq}.
 
 send(_, _) ->
